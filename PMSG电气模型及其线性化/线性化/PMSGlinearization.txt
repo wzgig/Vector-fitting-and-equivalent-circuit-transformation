@@ -1,0 +1,319 @@
+clear;
+clc;
+tic
+
+Path_root_Results = "your root";
+
+if ~exist(Path_root_Results, 'dir')
+    mkdir(Path_root_Results);
+    disp(['Folder ', Path_root_Results, ' created.']);
+else
+    disp(['Folder ', char(Path_root_Results), ' already exists.']);
+end
+
+% 定义参数范围和步长
+P_range = linspace(-0.3, -1, 5);
+Q_range = linspace(-1, 1, 5);
+V_range = linspace(0.9, 1.1, 5);
+xi_range = linspace(-pi/18, pi/18, 20);
+
+% P_range = -1;
+% Q_range = 0;
+% V_range = 1;
+% xi_range = 0; 
+
+for iP = 1:length(P_range)
+    P = P_range(iP);
+    for iQ = 1:length(Q_range)
+        Q = Q_range(iQ);
+        for iV = 1:length(V_range)
+            V = V_range(iV);
+            for ixi = 1:length(xi_range)
+                xi = xi_range(ixi);
+
+% ---- 用于命名：索引 + 实际值（对文件名安全）----
+xi_deg = xi * 180/pi;
+
+% 建议把 P/Q/V 统一放大 1000 变成整数（-0.300 -> -300），避免小数点
+P_milli = round(P*1000);
+Q_milli = round(Q*1000);
+V_milli = round(V*1000);
+xi_mdeg = round(xi_deg*1000);  % 毫度
+
+% 文件名：既有索引，也有实际值（单位写清楚）
+fname = sprintf('iP%02d_iV%02d_iQ%02d_iX%02d__P%+dm_Q%+dm_V%+dm_xi%+dmd', ...
+                iP, iV, iQ, ixi, P_milli, Q_milli, V_milli, xi_mdeg);
+
+f    = 60;
+Fnom    = f;
+Np  = 48;
+w_g = 2*pi*f;
+Sbase = 2e6;
+Vbase = 690;
+Ibase = Sbase/(Vbase);
+wbase = w_g;
+Zbase = Vbase^2/Sbase;
+Lbase = Zbase/w_g;%电感基值
+Cbase = 1/(wbase*Zbase);%电容基值
+Tbase = Sbase/(w_g/Np);
+U_dcref = 1150;
+ugq_ref = 0;
+
+%% ---- 电网电压的α-β坐标系表示（功率不变框架下v_alpha、v_beta取值相同；缩放系数体现在p,q方程中） ----
+v_ab    = V * exp(1i*xi);
+v_alpha = real(v_ab);  % 电压α轴分量
+v_beta  = imag(v_ab);  % 电压β轴分量
+
+%% ---- 从p-q方程求解i_alpha、i_beta（等功率 => 不含3/2系数） ----
+% p = v_alpha*i_alpha + v_beta*i_beta
+% q = v_beta*i_alpha  - v_alpha*i_beta
+
+v2 = v_alpha^2 + v_beta^2;   % 等于V²
+
+if v2 < 1e-12
+    error('电压幅值过小：无法计算电流参考值。');
+end
+
+% 逆映射公式（等功率）：
+% [i_alpha; i_beta] = 1/v2 * [ v_alpha  v_beta;
+%                              v_beta  -v_alpha] * [P; Q]
+i_vec   = 1 / v2 * [ v_alpha,  v_beta;
+                     v_beta,  -v_alpha ] * [P; Q];
+
+i_alpha = i_vec(1);
+i_beta  = i_vec(2);
+i_ab    = i_alpha + 1i*i_beta;
+
+R_g = 0.05;
+L_g = 7e-3;
+C_dc = 1e-3;
+
+Psi_f = 3.88889;%ac           % 转子磁链 
+L_sd = 1.8e-3;%ac         % d轴电感 
+L_sq = 1.8e-3;%ac         % q轴电感 
+R_s = 0.0026;%ac          % 定子电阻
+beta = 0;                 % 桨距角，单位：度（固定值
+pitch = beta;
+J = 35000;%ac
+D_m = 0.078;%ac           % 自阻尼系数
+R_t = 36.6;
+% rho = 1.12;
+v_w = 12;
+
+Kp_Id_stator = 1;
+Ki_Id_stator = 12;
+Kp_Iq_stator = 1;
+Ki_Iq_stator = 12;
+Kp_Speed = 100;
+Ki_Speed = 220;
+Kp_Udc = 1;
+Ki_Udc = 10;
+Kp_Id_grid = 1;
+Ki_Id_grid = 15;
+Kp_Iq_grid = 1;
+Ki_Iq_grid = 15;
+
+Kp_PLL = 250;
+Ki_PLL = 3200;
+T_d = 1/6000;
+
+syms PLL_int thetapll
+%% ========== 坐标变换（GSC的电压观测） ==========
+% PLL
+theta_g = thetapll;         % 网侧PLL估计的同步角
+% 构造变换矩阵，将d-q轴量转换为定轴坐标系（用于测量或控制）
+Tg_alphabeta_dq = [cos(theta_g) sin(theta_g); -sin(theta_g) cos(theta_g)];
+vg_dq_real = Vbase * Tg_alphabeta_dq * [v_alpha; v_beta];  % GSC中的实际电压
+% 变换后各轴上的电压值提取
+v_g_d = vg_dq_real(1);          % 网侧d轴电压
+v_g_q = vg_dq_real(2);         % 网侧q轴电压
+
+%% ========== xi求解 ==========
+eqnq = Ki_PLL*(v_g_q/Vbase - ugq_ref) == 0;
+[pllg] = solve(eqnq, thetapll);
+% === 从解中选取与 xi 最接近的那个（复数只取实部） ===
+pllg_v   = vpa(pllg);             % 提高数值精度/转成可比较形式
+pllg_r   = real(pllg_v);          % 若有复数解，只取实部
+xi_v = vpa(xi);
+[~, idx] = min(abs(pllg_r - xi_v));
+thetapll = pllg_r(idx);
+disp(thetapll)
+PLL_int = 0;
+
+% v_g_d = round(eval(v_g_d));
+% v_g_q = round(eval(v_g_q));
+
+syms omega_m Psi_sq Psi_sd Id_stator_int Iq_stator_int Speed_int...
+    u_sd u_sq U_dc Udc_int i_gd i_gq Id_grid_int Iq_grid_int;
+syms omega_best i_gqref
+
+Tg_dq_alphabeta = [cos(theta_g) -sin(theta_g); sin(theta_g) cos(theta_g)];
+ig_dq_alphabeta = (1/Ibase)*Tg_dq_alphabeta*[i_gd;i_gq];
+
+i_galpha = ig_dq_alphabeta(1);
+i_gbeta = ig_dq_alphabeta(2);
+
+n_ref = omega_best*30/pi;
+ugq_ref = 0;
+
+n = omega_m * 30/pi;
+omega_e = omega_m*Np;
+
+i_sd = (Psi_sd - Psi_f)/L_sd;
+i_sq = Psi_sq/L_sq;
+
+Te = Np*(Psi_f*i_sq);
+
+u1 = 0.5*pi;
+u2 = 1.225;
+lambda = (R_t*omega_m)/(v_w);
+lambda_i = 1/(1/(lambda+0.08*beta)-0.035/(beta^3+1));
+Cp = 0.51763*(116/lambda_i-0.4*beta-5)*exp(-21/lambda_i)+0.006795*lambda;
+P_m = u1*u2*(R_t^2)*(v_w^3)*Cp;
+T_m = (-1)*(P_m)/omega_m;
+
+% dy1 = n_ref - n;
+% dx1 = i_sdref - i_sd;
+% dx2 = i_sqref - i_sq;
+i_sdref = 0;
+i_sqref = Kp_Speed*(n_ref - n) + Ki_Speed*Speed_int;
+u_sqref = Kp_Iq_stator*(i_sqref - i_sq)+Ki_Iq_stator*Iq_stator_int+omega_e*Psi_f+omega_e*L_sd*i_sd;
+u_sdref = Kp_Id_stator*(i_sdref - i_sd)+Ki_Id_stator*Id_stator_int-omega_e*L_sq*i_sq;
+
+P_s = (u_sd * i_sd + u_sq * i_sq);%(2-17)
+Q_s = (u_sq * i_sd - u_sd * i_sq);%(2-18)
+P_e = Te * omega_m;
+
+i_gdref = Kp_Udc*(U_dc - U_dcref) + Ki_Udc*Udc_int;
+
+u_gd = - Kp_Id_grid*(i_gdref - i_gd) - Ki_Id_grid*Id_grid_int - R_g*i_gd + v_g_d+i_gq*w_g*L_g;
+u_gq = - Kp_Iq_grid*(i_gqref - i_gq) - Ki_Iq_grid*Iq_grid_int - R_g*i_gq + v_g_q-i_gd*w_g*L_g;
+
+P_dc = (u_gd* i_gd + u_gq * i_gq);%(2-17)
+P_g = (v_g_d * i_gd + v_g_q * i_gq);%(2-17)
+Q_g = (v_g_q * i_gd - v_g_d * i_gq);%(2-18)
+
+eqn1 = (Te - T_m - D_m*omega_m) / J == 0;
+eqn2 = u_sq - R_s*i_sq - omega_e*Psi_sd == 0;
+eqn3 = u_sd - R_s*i_sd + omega_e*Psi_sq == 0;
+eqn4 = i_sdref - i_sd == 0;
+eqn5 = i_sqref - i_sq == 0;
+eqn6 = n_ref - n == 0;
+eqn7 = (u_sdref - u_sd)/T_d == 0;
+eqn8 = (u_sqref - u_sq)/T_d == 0;
+eqn9 = (P_s - P_dc)/(C_dc*U_dc) == 0;
+eqn10 = U_dc - U_dcref == 0;
+eqn11 = (v_g_d - u_gd - R_g*i_gd + w_g*L_g*i_gq)/L_g == 0;
+eqn12 = (v_g_q - u_gq - R_g*i_gq - w_g*L_g*i_gd)/L_g == 0;
+eqn13 = i_gdref - i_gd == 0;
+eqn14 = i_gqref - i_gq == 0;
+eqn15 = i_galpha == i_alpha;
+eqn16 = i_gbeta == i_beta;
+
+
+[omega_m, Psi_sq, Psi_sd, Id_stator_int, Iq_stator_int, Speed_int,...
+    u_sd, u_sq, U_dc, Udc_int, i_gd, i_gq, Id_grid_int, Iq_grid_int,...
+    omega_best, i_gqref]...
+                      = vpasolve(eval([eqn1,eqn2,eqn3,eqn4,eqn5,eqn6, ...
+                      eqn7,eqn8,eqn9,eqn10,eqn11,eqn12,eqn13,eqn14, ...
+                      eqn15,eqn16]),...
+                      [omega_m Psi_sq Psi_sd Id_stator_int Iq_stator_int Speed_int ...
+                      u_sd u_sq U_dc Udc_int i_gd i_gq Id_grid_int Iq_grid_int ...
+                      omega_best i_gqref],...
+                      [-inf,inf;-inf,inf;-inf,inf;-inf,inf;-inf,inf;-inf,inf;-inf,inf;-inf,inf; ...
+                      -inf,inf;-inf,inf;-inf,inf;-inf,inf;-inf,inf;-inf,inf; ...
+                      -inf,inf;-inf,inf]);
+
+inistate = [omega_m Psi_sq Psi_sd Id_stator_int Iq_stator_int Speed_int...
+    u_sd u_sq U_dc Udc_int i_gd i_gq Id_grid_int Iq_grid_int PLL_int thetapll]';
+
+omega_best = getRealIfSmallImag(omega_best);
+i_gqref = getRealIfSmallImag(i_gqref);
+
+state_size = size(inistate,1);
+
+inistate2 = [omega_m Psi_sq Psi_sd Id_stator_int Iq_stator_int Speed_int...
+    u_sd u_sq U_dc Udc_int i_gd i_gq Id_grid_int Iq_grid_int PLL_int thetapll]';
+
+
+x_ss = inistate2;  % 稳态状态
+u_ss = [v_alpha, v_beta, omega_best, i_gqref];           % 稳态输入
+% y_ss = yy;
+
+epsilon = 1e-7;
+n = length(x_ss);  % 状态维度
+m = length(u_ss);  % 输入维度
+p = 2;  % 输出维度
+
+% 初始化矩阵
+A = zeros(n, n);
+B = zeros(n, m);
+C = zeros(p, n);
+D = zeros(p, m);
+
+[dxdt0, y0] = PMSG_fun(0, x_ss, u_ss);
+
+for i = 1:n
+    hi = 1e-6 * max(1, abs(x_ss(i)));
+    xp = x_ss; xm = x_ss;
+    xp(i) = xp(i) + hi;
+    xm(i) = xm(i) - hi;
+
+    [fp, yp] = PMSG_fun(0, xp, u_ss);
+    [fm, ym] = PMSG_fun(0, xm, u_ss);
+
+    A(:,i) = (fp - fm)/(2*hi);
+    C(:,i) = (yp - ym)/(2*hi);
+end
+
+for j = 1:m
+    hj = 1e-6 * max(1, abs(u_ss(j)));
+    up = u_ss; um = u_ss;
+    up(j) = up(j) + hj;
+    um(j) = um(j) - hj;
+
+    [fp, yp] = PMSG_fun(0, x_ss, up);
+    [fm, ym] = PMSG_fun(0, x_ss, um);
+
+    B(:,j) = (fp - fm)/(2*hj);
+    D(:,j) = (yp - ym)/(2*hj);
+end
+
+sys = ss(A,B,C,D);
+eigenvalues = eig(A);
+meta = struct();
+meta.timestamp = datestr(now, 'yyyy-mm-dd HH:MM:SS');
+meta.index = struct('iP',iP,'iQ',iQ,'iV',iV,'ixi',ixi);
+meta.param = struct('P',P,'Q',Q,'V',V,'xi_rad',xi,'xi_deg',xi_deg);
+meta.sizes = struct('n',n,'m',m,'p',p);
+meta.filename = fname;     % 方便从 mat 内部知道它叫什么
+meta.Path_root_Results = Path_root_Results;
+
+% filename = sprintf('P%d_V%d_Q%d_X%d.mat', iP, iV, iQ, ixi);
+% filepath = fullfile(Path_root_Results, filename);
+% save(filepath, 'sys');
+% disp("Saved to: " + filepath);
+
+filepath = fullfile(Path_root_Results, fname + ".mat");
+% 说明：x_ss/u_ss 是线性化点；thetapll 是稳态 PLL 角（前面解出来的）
+save(filepath, ...
+     'sys', 'A','B','C','D', ...
+     'eigenvalues', ...
+     'x_ss','u_ss', ...
+     'thetapll', ...
+     'P','Q','V','xi','xi_deg', ...
+     'iP','iQ','iV','ixi', ...
+     'meta');
+disp("Saved to: " + filepath);
+
+if any(real(eigenvalues) > 0)
+disp([filename, "is not stable."])
+else
+disp([num2str(P),num2str(V),num2str(Q),num2str(xi),"is stable."])    
+end
+            end
+        end
+    end
+end
+% run("Eigenvalue_and_Pole_Zero_Analysis.m")
+toc
