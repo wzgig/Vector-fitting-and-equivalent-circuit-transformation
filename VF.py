@@ -102,12 +102,13 @@ def model(s, poles, residues, d, h):
     """
     return sum(r / (s - p) for p, r in zip(poles, residues)) + d + s * h
 
-def vectfit_step(f, s, poles, conj_tol=1e-10):
+def vectfit_step(f, s, poles, weights=None, conj_tol=1e-10):
     """
     f = complex data to fit
     s = j*frequency
     poles = initial poles guess
         note: All complex poles must come in sequential complex conjugate pairs
+    weights = optional weights for the least squares fit (same length as f)
     returns adjusted poles
     """
     N = len(poles)
@@ -151,6 +152,19 @@ def vectfit_step(f, s, poles, conj_tol=1e-10):
 
     # Solve Ax == b using pseudo-inverse
     b = f
+
+    # Apply weights to the linear system (Weighted Least Squares)
+    if weights is not None:
+        w = np.asarray(weights).reshape(-1)
+        if w.shape[0] != Ns:
+             raise ValueError("weights length must match data length")
+        
+        # Apply weights to each row of A and each element of b
+        # This solves W*A*x = W*b in LS sense
+        # Ensure w can broadcast against A (Ns, 1) * (Ns, M)
+        A = A * w[:, np.newaxis]
+        b = b * w
+
     A = np.vstack((np.real(A), np.imag(A)))
     b = np.concatenate((np.real(b), np.imag(b)))
     x, residuals, rnk, s = lstsq(A, b, rcond=-1)
@@ -186,7 +200,7 @@ def vectfit_step(f, s, poles, conj_tol=1e-10):
     return new_poles
 
 # Dear gods of coding style, I sincerely apologize for the following copy/paste
-def calculate_residues(f, s, poles, rcond=-1, conj_tol=1e-10):
+def calculate_residues(f, s, poles, weights=None, rcond=-1, conj_tol=1e-10):
     Ns = len(s)
     N = len(poles)
 
@@ -220,6 +234,15 @@ def calculate_residues(f, s, poles, rcond=-1, conj_tol=1e-10):
     A[:, N+1] = s
     # Solve Ax == b using pseudo-inverse
     b = f
+
+    # Apply weights to the linear system (Weighted Least Squares)
+    if weights is not None:
+        w = np.asarray(weights).reshape(-1)
+        if w.shape[0] != Ns:
+             raise ValueError("weights length must match data length")
+        A = A * w[:, np.newaxis]
+        b = b * w
+
     A = np.vstack((np.real(A), np.imag(A)))
     b = np.concatenate((np.real(b), np.imag(b)))
     cA = np.linalg.cond(A)
@@ -277,21 +300,22 @@ def vectfit_auto(
     if inc_real:
         poles = np.concatenate((poles, [1]))
 
-    # 对输入数据进行加权（若提供 weights）
+    # 对 weights 进行预处理检查
     if weights is not None:
-        # 保证权重形状与 f/s 相同，避免广播错误
         weights = np.asarray(weights).reshape(-1)
         if weights.shape[0] != f.shape[0]:
             raise ValueError("weights 的长度必须与 f/s 的长度一致")
-        f_fit = f * weights
-    else:
-        f_fit = f
+            
+    # 【修正说明】严谨的加权矢量拟合不应直接修改目标函数 f,
+    # 而是应该在求解最小二乘方程组时对系数矩阵和残差进行加权。
+    # 原代码 f_fit = f * weights 实际上是在拟合 f*w 的极点，这是不正确的。
+    # 修正后 weights 将直接传递给 vectfit_step 和 calculate_residues。
 
     poles_list = []
     converged = False
     for it in range(n_iter):
         old_poles = poles.copy()
-        poles = vectfit_step(f_fit, s, poles, conj_tol=conj_tol)
+        poles = vectfit_step(f, s, poles, weights=weights, conj_tol=conj_tol)
         poles_list.append(poles)
         
         # 收敛性检查
@@ -314,7 +338,7 @@ def vectfit_auto(
                 print(f"Converged at iteration {it+1}")
             break
 
-    residues, d, h = calculate_residues(f_fit, s, poles, rcond=rcond, conj_tol=conj_tol)
+    residues, d, h = calculate_residues(f, s, poles, weights=weights, rcond=rcond, conj_tol=conj_tol)
 
     if verbose and not converged:
         print(f"Warning: Maximum iterations ({n_iter}) reached without full convergence.")
@@ -403,7 +427,7 @@ def calculate_error_metrics(f_orig, f_fitted):
         'max_rel': max_rel
     }
 
-def vectfit_find_best_order(f, s, min_poles=2, max_poles=40, step=2, target_error=1e-4, **kwargs):
+def vectfit_find_best_order(f, s, min_poles=2, max_poles=40, step=2, target_error=1e-4, silent=False, weighting_policy='none', weights=None, **kwargs):
     """
     自动寻找最优拟合阶数 (n_poles)。
     
@@ -412,6 +436,12 @@ def vectfit_find_best_order(f, s, min_poles=2, max_poles=40, step=2, target_erro
         min_poles, max_poles, step: 阶数扫描范围和步长
         target_error: 目标 RMS 相对误差。如果某阶数满足此误差，则认为足够好并停止搜索（优先选择低阶模型）。
                       如果想找绝对最小误差，可将此值设为 0。
+        silent: 是否静默输出进度信息。
+        weighting_policy: 预设的加权策略字符串。
+                          'none' - 不加权 (默认)
+                          'inv_mag' - 反向幅值加权 (1/|f|)，适合宽频带大动态范围数据
+                          'inv_sqrt' - 反向幅值平方根加权 (1/sqrt(|f|))
+        weights: (可选) 用户自定义的权重数组。如果提供了此参数，优先级高于 weighting_policy。
         **kwargs: 传递给 vectfit_auto_rescale 的其他参数 (如 n_iter)
         
     返回:
@@ -422,20 +452,35 @@ def vectfit_find_best_order(f, s, min_poles=2, max_poles=40, step=2, target_erro
     best_error_score = float('inf') # 用于比较的误差分数
     best_order = -1
     
+    # --- [新增优化: 统一处理权重] ---
+    if weights is None:
+        if weighting_policy == 'inv_mag':
+            mag = np.abs(f)
+            # 自动添加防除零保护，标准化处理
+            weights = 1.0 / np.maximum(mag, 1e-12 * np.max(mag))
+            if not silent: print("[VF] Applied Inverse Magnitude Weighting (1/|f|)")
+        elif weighting_policy == 'inv_sqrt':
+            mag = np.abs(f)
+            weights = 1.0 / np.sqrt(np.maximum(mag, 1e-12 * np.max(mag)))
+            if not silent: print("[VF] Applied Inverse Sqrt Magnitude Weighting")
+    # -------------------------------
+    
     history = [] # 记录 (order, err)
 
-    print(f"\n[Auto-Fit] 开始自动寻找最优阶数 (范围: {min_poles} ~ {max_poles}, 步长: {step})...")
-    print(f"{'Order':<6} | {'RMS Rel Error':<15} | {'Max Rel Error':<15} | {'Status'}")
-    print("-" * 60)
+    if not silent:
+        print(f"\\n[Auto-Fit] 开始自动寻找最优阶数 (范围: {min_poles} ~ {max_poles}, 步长: {step})...")
+        print(f"{'Order':<6} | {'RMS Rel Error':<15} | {'Max Rel Error':<15} | {'Status'}")
+        print("-" * 60)
     
     # 遍历阶数
     for n in range(min_poles, max_poles + 1, step):
         # 执行拟合
         # 注意：使用 vectfit_auto_rescale 以获得数值稳定性
         try:
-            poles, residues, d, h = vectfit_auto_rescale(f, s, n_poles=n, verbose=False, **kwargs)
+            poles, residues, d, h = vectfit_auto_rescale(f, s, n_poles=n, verbose=False, weights=weights, **kwargs)
             
             # 计算拟合数据
+
             f_fitted = model(s, poles, residues, d, h)
             
             # 计算误差
@@ -450,19 +495,20 @@ def vectfit_find_best_order(f, s, min_poles=2, max_poles=40, step=2, target_erro
                 best_metrics = metrics
                 status = "*" # 标记为当前最佳
             
-            print(f"{n:<6} | {metrics['rms_rel']:<15.6e} | {metrics['max_rel']:<15.6e} | {status}")
+            if not silent: print(f"{n:<6} | {metrics['rms_rel']:<15.6e} | {metrics['max_rel']:<15.6e} | {status}")
             history.append((n, err_score))
 
             # 检查是否满足目标误差 (早停机制)
             if err_score < target_error:
-                print(f"-" * 60)
-                print(f"[Auto-Fit] 阶数 {n} 已满足目标误差 ({target_error})。停止搜索。")
+                if not silent:
+                    print(f"-" * 60)
+                    print(f"[Auto-Fit] 阶数 {n} 已满足目标误差 ({target_error})。停止搜索。")
                 break
                 
         except Exception as e:
-            print(f"{n:<6} | {'Failed':<15} | {str(e)}")
+            if not silent: print(f"{n:<6} | {'Failed':<15} | {str(e)}")
 
-    print(f"[Auto-Fit] 最优结果: 阶数 = {best_order}, RMS相对误差 = {best_error_score:.6e}")
+    if not silent: print(f"[Auto-Fit] 最优结果: 阶数 = {best_order}, RMS相对误差 = {best_error_score:.6e}")
     return best_result[0], best_result[1], best_result[2], best_result[3], best_metrics
 
 class SystemAnalyzer:
@@ -509,6 +555,11 @@ class SystemAnalyzer:
         self.valid = True
 
     def classify_poles(self):
+        """
+        对拟合得到的极点进行分类:
+        1. 实数极点 (Real Poles) -> 对应 RL 串联支路
+        2. 共轭复数极点对 (Complex Conjugate Pairs) -> 对应 RLC 串联支路 (含受控源)
+        """
         poles = self.data['poles']
         residues = self.data['residues']
         n = len(poles)
@@ -557,7 +608,27 @@ class SystemAnalyzer:
                 print(f"警告: 发现未配对的复数极点: {poles[i]}")
 
     def calculate_parameters(self):
+        """
+        根据矢量拟合得到的极点(poles)、留数(residues)、常数项(d)和线性项(h)，
+        计算对应的等效电路元件参数。
+        
+        转换原理基于将有理函数 H(s) 的各项与对应电路子拓扑的导纳(或阻抗)表达式进行系数匹配。
+        总导纳 Y_total(s) = Y_RC(s) + Σ Y_RL(s) + Σ Y_RLC(s)
+        """
         # 1. 计算 RC 并联支路 (由 offset 和 slope 决定)
+        # -------------------------------------------------------------------------
+        # 原理:
+        # VF 模型项: d + s * h
+        # 对应电路: 电阻 R 和电容 C 并联，其导纳为 Y_RC(s) = G + s * C = 1/R + s * C
+        #
+        # 转换公式:
+        # R = 1 / d
+        # C = h
+        #
+        # 回推公式 (Circuit -> Model):
+        # d = 1 / R
+        # h = C
+        # -------------------------------------------------------------------------
         d = self.output_data['offset']
         h = self.output_data['slope']
         
@@ -581,6 +652,20 @@ class SystemAnalyzer:
             self.rc_num = 0
 
         # 2. 计算 RL 串联支路
+        # -------------------------------------------------------------------------
+        # 原理:
+        # VF 模型项: r / (s - p)  (其中 p 为实极点，r 为实留数)
+        # 对应电路: 电阻 R_L 与电感 L 串联，其导纳为 Y_RL(s) = 1 / (L * s + R_L)
+        # 整理为标准形式: Y_RL(s) = (1/L) / (s + R_L/L)
+        #
+        # 转换公式:
+        # 1/L = r              => L = 1 / r
+        # -R_L/L = p           => R_L = -p * L = -p / r
+        #
+        # 回推公式 (Circuit -> Model):
+        # p = -R_L / L
+        # r = 1 / L
+        # -------------------------------------------------------------------------
         self.output_data['rl_params'] = []
         for item in self.output_data['rl_pairs']:
             p = item['pole'].real
@@ -607,17 +692,48 @@ class SystemAnalyzer:
         self.rl_num = len(self.output_data['rl_params'])
 
         # 3. 计算 RLC 支路
+        # -------------------------------------------------------------------------
+        # 原理:
+        # 对于共轭复数极点对 p, p* (p = α + jβ) 和留数 c, c* (c = c_r + jc_i)，
+        # 对应的有理分式对的和为:
+        # H_part(s) = c/(s-p) + c*/(s-p*) 
+        #           = [ (c+c*)s - (c*p* + c*p) ] / [ s^2 - (p+p*)s + p*p* ]
+        #           = [ 2*c_r * s - 2*(c_r*α + c_i*β) ] / [ s^2 - 2α*s + (α^2+β^2) ]
+        # 令 b = -2*(c_r*α + c_i*β)，H_part(s) = (2*c_r * s + b) / (s^2 - 2αs + |p|^2)
+        #
+        # 对应电路: 串联 RLC 支路 并联 一个受控电流源 (VCCS)。
+        # 串联 RLC 支路导纳: Y_series = 1 / (L*s + R + 1/(sC)) = (s/L) / (s^2 + (R/L)s + 1/(LC))
+        # 受控源引入的等效导纳: Y_VCCS = g_m * (V_C / V_total) 
+        # 其中 V_C(s) = I_series/(sC) = (Y_series * V_total) / (sC)
+        # Y_VCCS = g_m * (Y_series / sC) = g_m * (1/L) / (C * (s^2 + ...)) / s ? 
+        # 不，推导依据是 I_add = b*L*C * s * V_C ? 
+        # 根据 PDF 中推导，最终表达式为:
+        # Y_RLC_total(s) = Y_series + Y_add = ( (1/L)s + b ) / ( s^2 + (R/L)s + 1/(LC) )
+        # 其中 b 项由受控源贡献，g_m = b * L * C (即 b = g_m / (LC))
+        # 
+        # 转换公式:
+        # 对应分母: 1/(LC) = |p|^2, R/L = -2α
+        # 对应分子: 1/L = 2*c_r, b = -2*(c_r*α + c_i*β)
+        # 
+        # 计算步骤:
+        # L = 1 / (2 * c_r)
+        # R = -2α * L = -α / c_r
+        # C = 1 / (L * |p|^2) = (2 * c_r) / (α^2 + β^2)
+        # g_m = b * L * C = b / |p|^2
+        #
+        # 回推公式 (Circuit -> Model):
+        # α (p_real) = -R / (2*L)
+        # β (p_imag) = sqrt( 1/(LC) - α^2 )
+        # c_r (c_real) = 1 / (2*L)
+        # b = g_m / (LC)
+        # c_i (c_imag) = -(b + 2*c_r*α) / (2*β)
+        # -------------------------------------------------------------------------
         self.output_data['rlc_params'] = []
         for item in self.output_data['rlc_pairs']:
             # 取其中一个极点和留数（通常取虚部为正的，或直接取第一个）
             p = item['poles'][0]
             k = item['residues'][0] # k为留数
             
-            # 使得留数 k = k' + j*k''
-            # 极点 p = -alpha + j*beta
-            
-            # 标准二阶项对应物理参数计算
-            # 公式依据具体的等效电路拓扑在此处实现
             # 使用原代码逻辑：
             p_real, p_imag = p.real, p.imag
             c_real, c_imag = k.real, k.imag
@@ -701,8 +817,10 @@ def plot_fitting_result(s, f_orig, f_fitted, metrics=None):
     """
     magnitude_f = np.abs(f_orig)
     magnitude_fitted = np.abs(f_fitted)
-    phase_f = np.degrees(np.angle(f_orig))
-    phase_fitted = np.degrees(np.unwrap(np.angle(f_fitted)))
+    # phase_f      = np.degrees(np.unwrap(np.angle(f_orig)))
+    # phase_fitted = np.degrees(np.unwrap(np.angle(f_fitted)))
+    phase_f      = np.degrees(np.angle(f_orig))
+    phase_fitted = np.degrees(np.angle(f_fitted))
 
     w = np.imag(s)
     freq_hz = w / (2 * np.pi)
@@ -737,22 +855,24 @@ def plot_fitting_result(s, f_orig, f_fitted, metrics=None):
     plt.tight_layout()
     plt.show()
 
-def run_pipeline_case2():
-    """
-    测试案例2: Escalar measured response of a transformer
-    """
-    print("\n运行测试案例 2: Transformer Data Analysis")
-    csv_path = r".\TRANSF_DATA.csv"
-    
+def run_pipeline_case():
+    csv_path = r"E:\ruanjian\GitHubDesktop\Vector-fitting-and-equivalent-circuit-transformation\your_root\csv_data\iP01_iV01_iQ01_iX01__P-300m_Q-1000m_V+900m_xi-10000md.csv"
+
     try:
-        Mdata = pd.read_csv(csv_path).to_numpy()
-        # 根据原始代码逻辑提取数据
-        # 取前160行，第0列幅度，第1列角度
-        test_f = Mdata[:160, 0] * np.exp(1j * np.deg2rad(Mdata[:160, 1]))
-        w = 2 * np.pi * np.linspace(0, 10e6, 401)[1:161]
+        # 读取CSV，跳过第一行表头，只保留数值数据
+        Mdata = pd.read_csv(csv_path, header=0).to_numpy()
+        
+        # 1. 提取CSV中的实际频率（第一列，前160行），假设单位为Hz
+        f_csv = Mdata[:, 0]  # CSV第一列是频率，取前160行
+        # 2. 计算角频率w（w = 2πf，单位rad/s）
+        w = 2 * np.pi * f_csv
+        # 3. 构建复频率s = 1j * w
         test_s = 1j * w
+        
+        # 4. 提取实部（第二列）和虚部（第三列），合成复数测试数据
+        test_f = Mdata[:, 1] + 1j * Mdata[:, 2]
     except Exception as e:
-        print(f"数据加载失败: {e}")
+        print(f"数据加载/处理失败: {e}")
         return
 
     # 矢量拟合 (使用自动寻优)
@@ -763,7 +883,8 @@ def run_pipeline_case2():
         min_poles=2, 
         max_poles=32, 
         step=2, 
-        target_error=5e-4 # 设定一个期望的精度目标，满足即停
+        target_error=5e-4, # 设定一个期望的精度目标，满足即停
+        weighting_policy='inv_mag' # 启用反向幅值加权，与 batch_processing.py 保持一致
     )
     
     # 生成拟合曲线用于绘图
@@ -784,188 +905,4 @@ def run_pipeline_case2():
 
 if __name__ == '__main__':
     # 可以在此处切换不同的测试案例函数
-    run_pipeline_case2()
-    
-    # 其他测试案例（如代码中保留的注释）可以按照类似 run_pipeline_case2 的方式封装
-
-
-    # 测试案例1 18th order frequency response F(s) of one dimension
-    # test_s = 1j*np.linspace(1, 1e5, 800)
-    #
-    # test_poles = [
-    #     -4500,
-    #     -41000,
-    #     -100+5000j, -100-5000j,
-    #     -120+15000j, -120-15000j,
-    #     -3000+35000j, -3000-35000j,
-    #     -200+45000j, -200-45000j,
-    #     -1500+45000j, -1500-45000j,
-    #     -500+70000j, -500-70000j,
-    #     -1000+73000j, -1000-73000j,
-    #     -2000+90000j, -2000-90000j,
-    # ]
-    # test_residues = [
-    #     -3000,
-    #     -83000,
-    #     -5+7000j, -5-7000j,
-    #     -20+18000j, -20-18000j,
-    #     6000+45000j, 6000-45000j,
-    #     40+60000j, 40-60000j,
-    #     90+10000j, 90-10000j,
-    #     50000+80000j, 50000-80000j,
-    #     1000+45000j, 1000-45000j,
-    #     -5000+92000j, -5000-92000j
-    # ]
-    # test_d = .2
-    # test_h = 2e-5
-    #
-    # test_f = sum(c/(test_s - a) for c, a in zip(test_residues, test_poles))
-    # test_f += test_d + test_h*test_s
-
-    # # 定义CSV文件路径
-    # csv_path = r".\frequency_response_data.csv"
-    # Mdata = pd.read_csv(csv_path)
-    # # 将DataFrame转换为numpy数组以便后续处理
-    # Mdata = Mdata.to_numpy()
-    # # 计算频率响应样本
-    # # 直接使用Measured_Magnitude_Linear
-    # magnitude_linear = Mdata[:134, 1]  # Measured_Magnitude_Linear 是第二列
-    # # 将相位从度转换为弧度
-    # phase_radians = Mdata[:134, 2] * np.pi / 180  # Measured_Phase_Deg 转换为弧度
-    # # 计算复数频率响应 f(s)
-    # test_f = magnitude_linear * np.exp(1j * phase_radians)
-    # # 提取频率数据：Frequency_Hz
-    # test_s = Mdata[:134, 0]  # 第一列是Frequency_Hz
-    # # 将频率转换为复数域s=jω
-    # test_s = 1j * 2 * np.pi * test_s
-
-    # # 定义CSV文件路径
-    # csv_path = r".\impedance_pu.csv"
-    # Mdata = pd.read_csv(csv_path)
-    # # 将DataFrame转换为numpy数组以便后续处理
-    # Mdata = Mdata.to_numpy()
-    # # 计算频率响应样本
-    # # 直接使用Measured_Magnitude_Linear
-    # magnitude_linear = Mdata[:,1]  # Measured_Magnitude_Linear 是第二列
-    # # 将相位从度转换为弧度
-    # phase_degrees = Mdata[:, 2]
-    # # 计算复数频率响应 f(s)
-    # test_f = magnitude_linear * np.exp(1j * phase_degrees * np.pi / 180)
-    # # 提取频率数据：Frequency_Hz
-    # test_s = Mdata[:, 0]  # 第一列是Frequency_Hz
-    # # 将频率转换为复数域s=jω
-    # test_s = 1j * 2 * np.pi * test_s
-
-
-    # #测试案例2 Escalar measured response of a transformer
-    # csv_path = r".\TRANSF_DATA.csv"
-    # # 使用pandas读取CSV文件到DataFrame
-    # Mdata = pd.read_csv(csv_path)
-    # # 将DataFrame转换为numpy数组以便后续处理
-    # Mdata = Mdata.to_numpy()
-    # # 计算f(s)的样本：取前160行数据，第0列为幅度，第1列为角度（转换为弧度）
-    # test_f = Mdata[:160, 0] * np.exp(1j * Mdata[:160, 1] * pi / 180)
-    # w = 2 * pi * np.linspace(0, 10e6, 401)[1:161]
-    # # 将频率转换为复数域s=jω
-    # test_s = 1j * w
-
-    # #测试案例3 Elementwise approximation of a 6x6 admitance matrix
-    # csv_path = r".\SYSADMITANCE_DATA.csv"  # local path! Update with your own path
-    # Mdata = pd.read_csv(csv_path)  # Measured data
-    # Mdata = np.ravel(Mdata.to_numpy())  # Data transfered into a numpy array
-    # N = int(Mdata[0])  # Number of frequency samples
-    # Ysys = np.zeros((6, 6, N), dtype=np.complex128)  # Samples of matrix Y(s) imported from the file
-    # s = np.zeros(N, dtype=np.complex128)  # Complex frequency points of evaluation for Y(s)
-    #
-    # # Y(s) and s are compressed in row-major order into Mdata array. Samples are organized in blocks of 73 numbers, inside each block the first
-    # # number matchs the complex frequency samples and the remaining ones corresponds to each element in the admitance matrix Y(s). first comes
-    # # the real part and then the imaginary part.
-    # k = 0  # sample index
-    # for i in range(1, Mdata.size, 73):
-    #     s[k] = 1j * Mdata[i]  # complex frequency sample
-    #     for row in range(6):
-    #         ind = row * 12 + i
-    #         Ysys[row, :, k] = Mdata[ind + 1:ind + 12:2] + 1j * Mdata[ind + 2:ind + 13:2]  # entire row is append to Y(s)
-    #     k += 1
-    # # Stacking Y(s) data as elements of a frequency domain function F(s).
-    # # Due to Y(s) is symmetric only the members into the lower trinagular submatrix Y(s) are taken
-    # F = np.zeros((21, N), dtype=np.complex128)
-    # k = 0  # element index
-    # for row in range(6):
-    #     for col in range(row, 6):
-    #         F[k, :] = Ysys[row, col, :]  # all samples are in z axis
-    #         k += 1
-    #
-    # print("\nFrequency domain samples of F(s) = \n", F)
-    # print("f(s) shape = ", F.shape, "\ndata type in f(s) = ", type(F), type(F[0, 0]))
-    #
-    # weights = 1 / np.sqrt(np.abs(F))  # Weighting with inverse of the square root of the magnitude of F(s)
-    # n = 50  # Order of approximation
-    # w = s.imag  # Angular frequency samples in rad/s
-    # # Starting poles generation:
-    # Bet = np.linspace(w[0], w[N - 1], int(n / 2))
-    # poles = np.zeros(n, dtype=np.complex128)
-    # # setting poles as complex conjugated pairs
-    # for k in range(int(n / 2)):
-    #     alf = -Bet[k] / 100
-    #     poles[2 * k] = alf - 1j * Bet[k]
-    #     poles[2 * k + 1] = alf + 1j * Bet[k]
-    #
-    # print(
-    #     "A better set of initial poles are obtained by fitting the weighted column sum of the first column of Y(s)\n * Applying 5 iterations of vector fitting...")
-    # # These weights are common for all column elements
-    # g = np.zeros(N, dtype=np.complex128)
-    # for k in range(6):
-    #     g = g + F[k, :] / np.linalg.norm(F[k, :])
-    # weights_g = 1 / np.abs(g)
-    # test_f = g
-    # test_s = s
-
-    # #测试案例4 Elementwise approximation of a 3x3 propagation matrix of an aerial transmission line.\nIt corresponds to single propagation mode and time delay is already extracted
-    # # Importing data from a .csv file (lineConstants_H0.csv)
-    # csv_path = r".\MODEH_DATA.csv"  # local path! Update with your own path
-    # # Pandas data frame with H(w) samples in the frequency domain:
-    # # Columns organization: index , OMEGA(Ang. frequency), H_00REAL(1st element's real part), H_00IMAG(1st element's imaginary part), ... H_01REAL(2nd element's real part), ...
-    # Hdata = pd.read_csv(csv_path)
-    # w = np.ravel(Hdata.loc[:, "OMEGA"].to_numpy())  # Angular frequency samples
-    # s = 1j * w  # Complex frequency samples
-    # N = w.size  # Number of samples
-    # Hw = np.zeros((3, 3, N), dtype=np.complex128)  # Propagation matrix in the frequency domain
-    # # Copying data into H:
-    # k = 2
-    # for row in range(3):
-    #     for col in range(3):
-    #         Hw[row, col, :] = np.ravel(Hdata.iloc[:, k].to_numpy()) + 1j * np.ravel(
-    #             Hdata.iloc[:, k + 1].to_numpy())  # elements are read in RMO
-    #         k += 2
-    #
-    # # Stacking H(s) data as elements of a frequency domain function F(s).
-    # # Due to H(s) is asymmetric, F(s) is a flattened version of H(s). Row Major Ordering is used to map H(s) elements into F(s)
-    # F = np.zeros((3 * 3, N), dtype=np.complex128)
-    # k = 0  # element index
-    # for row in range(3):
-    #     for col in range(3):
-    #         F[k, :] = Hw[row, col, :]  # all frequency samples are in z axis
-    #         k += 1
-    #
-    # print("\nFrequency domain samples of F(s) = \n", F)
-    # print("f(s) shape = ", F.shape, "\ndata type in f(s) = ", type(F), type(F[0, 0]))
-    #
-    # weights = np.ones(N, dtype=np.float64)  # No samples weighting
-    # n = 35  # Order of approximation
-    # # Starting poles generation:
-    # Bet = np.logspace(np.log10(w[0]), np.log10(w[N - 1]), int(n / 2))
-    # poles = np.zeros(n, dtype=np.complex128)
-    # # setting poles as complex conjugated pairs
-    # for k in range(int(n / 2)):
-    #     alf = -Bet[k] / 100
-    #     poles[2 * k] = alf - 1j * Bet[k]
-    #     poles[2 * k + 1] = alf + 1j * Bet[k]
-    #
-    # print("A set of initial poles are obtained by fitting trace of Hi\n * Applying 10 iterations of vector fitting...")
-    # # Using H trace to identify initial poles:
-    # trH = np.zeros(N, dtype=np.complex128)
-    # for k in range(3):
-    #     trH = trH + Hw[k, k, :]
-    # test_f = trH
-    # test_s = s
+    run_pipeline_case()
