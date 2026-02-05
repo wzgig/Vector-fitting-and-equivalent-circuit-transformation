@@ -427,7 +427,7 @@ def calculate_error_metrics(f_orig, f_fitted):
         'max_rel': max_rel
     }
 
-def vectfit_find_best_order(f, s, min_poles=2, max_poles=40, step=2, target_error=1e-4, silent=False, weighting_policy='none', weights=None, **kwargs):
+def vectfit_find_best_order(f, s, min_poles=2, max_poles=40, step=2, target_error=1e-10, silent=False, weighting_policy='none', weights=None, **kwargs):
     """
     自动寻找最优拟合阶数 (n_poles)。
     
@@ -883,7 +883,7 @@ def run_pipeline_case():
         min_poles=2, 
         max_poles=32, 
         step=2, 
-        target_error=5e-4, # 设定一个期望的精度目标，满足即停
+        target_error=1e-5, # 设定一个期望的精度目标，满足即停
         weighting_policy='inv_mag' # 启用反向幅值加权，与 batch_processing.py 保持一致
     )
     
