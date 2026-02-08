@@ -1,0 +1,189 @@
+导纳矩阵 Y(s) 元素零极点分析报告
+生成时间: 2026-02-09 00:48:08
+MAT文件: iP05_iV03_iQ03_iX11__P-1000m_Q+0m_V+1000m_xi+526md.mat
+过滤阈值 tol = 1.0e-08
+
+========== Yaa ==========
+minreal后传递函数(简化表示):
+  <a href="matlab:helpPopup('tf')" style="font-weight:bold">tf</a> - 属性:
+
+       Numerator: {[0 -0.0211 8.5651e+04 2.3565e+07 8.2267e+08 1.0069e+10 4.1134e+10]}
+     Denominator: {[1 2.9133e+03 8.5591e+05 5.8663e+07 1.4715e+09 1.5512e+10 5.8426e+10]}
+        Variable: 's'
+         IODelay: 0
+      InputDelay: 0
+     OutputDelay: 0
+       InputName: {''}
+       InputUnit: {''}
+      InputGroup: [1×1 struct]
+      OutputName: {''}
+      OutputUnit: {''}
+     OutputGroup: [1×1 struct]
+           Notes: [0×1 string]
+        UserData: []
+            Name: ''
+              Ts: 0
+        TimeUnit: 'seconds'
+    SamplingGrid: [1×1 struct]
+
+
+增益 k = -0.0210947958347
+零点数量: 5, 极点数量: 6
+RHP零点: 1, RHP极点: 0
+稳定性(连续): 稳定(所有极点在LHP)
+最靠近虚轴的极点(实部最大): -10.177170878+0j
+
+-- 零点列表 z --
+  1: 4060546.72166+0j
+  2: -236.577978018+0j
+  3: -15.0000168713+0j
+  4: -13.5325755895+0j
+  5: -9.99998596964+0j
+
+-- 极点列表 p --
+  1: -2591.73985378+0j
+  2: -236.467484048+0j
+  3: -46.5481367344+0j
+  4: -14.8708724615+0j
+  5: -13.532515952+0j
+  6: -10.177170878+0j
+
+
+========== Yab ==========
+minreal后传递函数(简化表示):
+  <a href="matlab:helpPopup('tf')" style="font-weight:bold">tf</a> - 属性:
+
+       Numerator: {[0 2.2964 6.9327e+03 7.2393e+05 2.0907e+07 2.3500e+08 9.1458e+08]}
+     Denominator: {[1 2.9133e+03 8.5591e+05 5.8663e+07 1.4715e+09 1.5512e+10 5.8426e+10]}
+        Variable: 's'
+         IODelay: 0
+      InputDelay: 0
+     OutputDelay: 0
+       InputName: {''}
+       InputUnit: {''}
+      InputGroup: [1×1 struct]
+      OutputName: {''}
+      OutputUnit: {''}
+     OutputGroup: [1×1 struct]
+           Notes: [0×1 string]
+        UserData: []
+            Name: ''
+              Ts: 0
+        TimeUnit: 'seconds'
+    SamplingGrid: [1×1 struct]
+
+
+增益 k = 2.2963566727
+零点数量: 5, 极点数量: 6
+RHP零点: 0, RHP极点: 0
+稳定性(连续): 稳定(所有极点在LHP)
+最靠近虚轴的极点(实部最大): -10.177170878+0j
+
+-- 零点列表 z --
+  1: -2911.79552353+0j
+  2: -69.022618669+0j
+  3: -14.9209223808+0j
+  4: -13.1687399316+0j
+  5: -10.0853721964+0j
+
+-- 极点列表 p --
+  1: -2591.73985378+0j
+  2: -236.467484048+0j
+  3: -46.5481367344+0j
+  4: -14.8708724615+0j
+  5: -13.532515952+0j
+  6: -10.177170878+0j
+
+
+========== Yba ==========
+minreal后传递函数(简化表示):
+  <a href="matlab:helpPopup('tf')" style="font-weight:bold">tf</a> - 属性:
+
+       Numerator: {[0 2.2964 6.9327e+03 7.2393e+05 2.0907e+07 2.3500e+08 9.1458e+08]}
+     Denominator: {[1 2.9133e+03 8.5591e+05 5.8663e+07 1.4715e+09 1.5512e+10 5.8426e+10]}
+        Variable: 's'
+         IODelay: 0
+      InputDelay: 0
+     OutputDelay: 0
+       InputName: {''}
+       InputUnit: {''}
+      InputGroup: [1×1 struct]
+      OutputName: {''}
+      OutputUnit: {''}
+     OutputGroup: [1×1 struct]
+           Notes: [0×1 string]
+        UserData: []
+            Name: ''
+              Ts: 0
+        TimeUnit: 'seconds'
+    SamplingGrid: [1×1 struct]
+
+
+增益 k = 2.2963566727
+零点数量: 5, 极点数量: 6
+RHP零点: 0, RHP极点: 0
+稳定性(连续): 稳定(所有极点在LHP)
+最靠近虚轴的极点(实部最大): -10.177170878+0j
+
+-- 零点列表 z --
+  1: -2911.79552353+0j
+  2: -69.022618669+0j
+  3: -14.9209223808+0j
+  4: -13.1687399316+0j
+  5: -10.0853721964+0j
+
+-- 极点列表 p --
+  1: -2591.73985378+0j
+  2: -236.467484048+0j
+  3: -46.5481367344+0j
+  4: -14.8708724615+0j
+  5: -13.532515952+0j
+  6: -10.177170878+0j
+
+
+========== Ybb ==========
+minreal后传递函数(简化表示):
+  <a href="matlab:helpPopup('tf')" style="font-weight:bold">tf</a> - 属性:
+
+       Numerator: {[0 -249.9789 -6.6897e+05 -5.5235e+07 -1.4531e+09 -1.5510e+10 -5.8418e+10]}
+     Denominator: {[1 2.9133e+03 8.5591e+05 5.8663e+07 1.4715e+09 1.5512e+10 5.8426e+10]}
+        Variable: 's'
+         IODelay: 0
+      InputDelay: 0
+     OutputDelay: 0
+       InputName: {''}
+       InputUnit: {''}
+      InputGroup: [1×1 struct]
+      OutputName: {''}
+      OutputUnit: {''}
+     OutputGroup: [1×1 struct]
+           Notes: [0×1 string]
+        UserData: []
+            Name: ''
+              Ts: 0
+        TimeUnit: 'seconds'
+    SamplingGrid: [1×1 struct]
+
+
+增益 k = -249.978905204
+零点数量: 5, 极点数量: 6
+RHP零点: 0, RHP极点: 0
+稳定性(连续): 稳定(所有极点在LHP)
+最靠近虚轴的极点(实部最大): -10.177170878+0j
+
+-- 零点列表 z --
+  1: -2591.71308737+0j
+  2: -46.5460230319+0j
+  3: -14.8708656591+0j
+  4: -12.7999382258+0j
+  5: -10.1771871185+0j
+
+-- 极点列表 p --
+  1: -2591.73985378+0j
+  2: -236.467484048+0j
+  3: -46.5481367344+0j
+  4: -14.8708724615+0j
+  5: -13.532515952+0j
+  6: -10.177170878+0j
+
+

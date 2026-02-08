@@ -1,0 +1,50 @@
+导纳矩阵 Y(s) 元素零极点分析报告
+生成时间: 2026-02-07 02:53:16
+过滤阈值 tol = 1.0e-08
+
+========== Yaa ==========
+minreal后传递函数(简化表示):
+  <a href="matlab:helpPopup('tf')" style="font-weight:bold">tf</a> - 属性:
+
+       Numerator: {[0 -0.0211 8.5651e+04 2.3565e+07 8.2267e+08 1.0069e+10 4.1134e+10]}
+     Denominator: {[1 2.9133e+03 8.5591e+05 5.8663e+07 1.4715e+09 1.5512e+10 5.8426e+10]}
+        Variable: 's'
+         IODelay: 0
+      InputDelay: 0
+     OutputDelay: 0
+       InputName: {''}
+       InputUnit: {''}
+      InputGroup: [1×1 struct]
+      OutputName: {''}
+      OutputUnit: {''}
+     OutputGroup: [1×1 struct]
+           Notes: [0×1 string]
+        UserData: []
+            Name: ''
+              Ts: 0
+        TimeUnit: 'seconds'
+    SamplingGrid: [1×1 struct]
+
+
+增益 k = -0.0210947958347
+零点数量: 5, 极点数量: 6
+RHP零点: 1, RHP极点: 0
+稳定性(连续): 稳定(所有极点在LHP)
+最靠近虚轴的极点(实部最大): -10.177170878+0j
+
+-- 零点列表 z --
+  1: 4060546.72166+0j
+  2: -236.577978018+0j
+  3: -15.0000168713+0j
+  4: -13.5325755895+0j
+  5: -9.99998596964+0j
+
+-- 极点列表 p --
+  1: -2591.73985378+0j
+  2: -236.467484048+0j
+  3: -46.5481367344+0j
+  4: -14.8708724615+0j
+  5: -13.532515952+0j
+  6: -10.177170878+0j
+
+

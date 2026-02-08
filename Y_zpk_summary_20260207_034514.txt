@@ -1,0 +1,252 @@
+SISO ZPK 全工况统计汇总报告
+生成时间: 2026-02-07 03:45:19
+过滤阈值 tol = 1.0e-08
+
+==================== 1) 零/极点数量统计 ====================
+(min/mean/max 仅统计成功工况)
+
+Yaa:
+  Zeros count : min=5, mean=5.000, max=5
+  Poles count : min=6, mean=6.000, max=6
+
+Yab:
+  Zeros count : min=5, mean=5.000, max=5
+  Poles count : min=6, mean=6.000, max=6
+
+Yba:
+  Zeros count : min=5, mean=5.000, max=5
+  Poles count : min=6, mean=6.000, max=6
+
+Ybb:
+  Zeros count : min=5, mean=5.000, max=5
+  Poles count : min=6, mean=6.000, max=6
+
+==================== 2) 实数 vs 复数共轭统计 ====================
+AllReal: 所有根虚部绝对值 <= tol
+HasComplexPair: 存在 |imag|>tol 的复根（至少一对）
+ConjugateOK: 若存在复根，检查其是否能在容差内找到共轭配对
+
+Yaa:
+  Zeros : AllReal=2500/2500 (100.00%), HasComplexPair=0/2500 (0.00%), ConjugateOK=2500/2500 (100.00%)
+  Poles : AllReal=2500/2500 (100.00%), HasComplexPair=0/2500 (0.00%), ConjugateOK=2500/2500 (100.00%)
+
+Yab:
+  Zeros : AllReal=2340/2500 (93.60%), HasComplexPair=160/2500 (6.40%), ConjugateOK=2500/2500 (100.00%)
+  Poles : AllReal=2500/2500 (100.00%), HasComplexPair=0/2500 (0.00%), ConjugateOK=2500/2500 (100.00%)
+
+Yba:
+  Zeros : AllReal=2500/2500 (100.00%), HasComplexPair=0/2500 (0.00%), ConjugateOK=2500/2500 (100.00%)
+  Poles : AllReal=2500/2500 (100.00%), HasComplexPair=0/2500 (0.00%), ConjugateOK=2500/2500 (100.00%)
+
+Ybb:
+  Zeros : AllReal=2466/2500 (98.64%), HasComplexPair=34/2500 (1.36%), ConjugateOK=2500/2500 (100.00%)
+  Poles : AllReal=2500/2500 (100.00%), HasComplexPair=0/2500 (0.00%), ConjugateOK=2500/2500 (100.00%)
+
+==================== 3) 出现复零点对的工况列表（按通道） ====================
+
+Yaa: HasComplexPair cases = 0
+  (none)
+
+Yab: HasComplexPair cases = 160
+  [ 537] iP02_iV01_iQ02_iX17__P-475m_Q-500m_V+900m_xi+6842md.mat
+  [ 538] iP02_iV01_iQ02_iX18__P-475m_Q-500m_V+900m_xi+7895md.mat
+  [ 539] iP02_iV01_iQ02_iX19__P-475m_Q-500m_V+900m_xi+8947md.mat
+  [ 540] iP02_iV01_iQ02_iX20__P-475m_Q-500m_V+900m_xi+10000md.mat
+  [ 561] iP02_iV01_iQ04_iX01__P-475m_Q+500m_V+900m_xi-10000md.mat
+  [ 562] iP02_iV01_iQ04_iX02__P-475m_Q+500m_V+900m_xi-8947md.mat
+  [ 563] iP02_iV01_iQ04_iX03__P-475m_Q+500m_V+900m_xi-7895md.mat
+  [ 564] iP02_iV01_iQ04_iX04__P-475m_Q+500m_V+900m_xi-6842md.mat
+  [ 639] iP02_iV02_iQ02_iX19__P-475m_Q-500m_V+950m_xi+8947md.mat
+  [ 640] iP02_iV02_iQ02_iX20__P-475m_Q-500m_V+950m_xi+10000md.mat
+  [ 661] iP02_iV02_iQ04_iX01__P-475m_Q+500m_V+950m_xi-10000md.mat
+  [ 662] iP02_iV02_iQ04_iX02__P-475m_Q+500m_V+950m_xi-8947md.mat
+  [1020] iP03_iV01_iQ01_iX20__P-650m_Q-1000m_V+900m_xi+10000md.mat
+  [1036] iP03_iV01_iQ02_iX16__P-650m_Q-500m_V+900m_xi+5789md.mat
+  [1037] iP03_iV01_iQ02_iX17__P-650m_Q-500m_V+900m_xi+6842md.mat
+  [1038] iP03_iV01_iQ02_iX18__P-650m_Q-500m_V+900m_xi+7895md.mat
+  [1039] iP03_iV01_iQ02_iX19__P-650m_Q-500m_V+900m_xi+8947md.mat
+  [1040] iP03_iV01_iQ02_iX20__P-650m_Q-500m_V+900m_xi+10000md.mat
+  [1061] iP03_iV01_iQ04_iX01__P-650m_Q+500m_V+900m_xi-10000md.mat
+  [1062] iP03_iV01_iQ04_iX02__P-650m_Q+500m_V+900m_xi-8947md.mat
+  [1063] iP03_iV01_iQ04_iX03__P-650m_Q+500m_V+900m_xi-7895md.mat
+  [1064] iP03_iV01_iQ04_iX04__P-650m_Q+500m_V+900m_xi-6842md.mat
+  [1065] iP03_iV01_iQ04_iX05__P-650m_Q+500m_V+900m_xi-5789md.mat
+  [1081] iP03_iV01_iQ05_iX01__P-650m_Q+1000m_V+900m_xi-10000md.mat
+  [1137] iP03_iV02_iQ02_iX17__P-650m_Q-500m_V+950m_xi+6842md.mat
+  [1138] iP03_iV02_iQ02_iX18__P-650m_Q-500m_V+950m_xi+7895md.mat
+  [1139] iP03_iV02_iQ02_iX19__P-650m_Q-500m_V+950m_xi+8947md.mat
+  [1140] iP03_iV02_iQ02_iX20__P-650m_Q-500m_V+950m_xi+10000md.mat
+  [1161] iP03_iV02_iQ04_iX01__P-650m_Q+500m_V+950m_xi-10000md.mat
+  [1162] iP03_iV02_iQ04_iX02__P-650m_Q+500m_V+950m_xi-8947md.mat
+  [1163] iP03_iV02_iQ04_iX03__P-650m_Q+500m_V+950m_xi-7895md.mat
+  [1164] iP03_iV02_iQ04_iX04__P-650m_Q+500m_V+950m_xi-6842md.mat
+  [1238] iP03_iV03_iQ02_iX18__P-650m_Q-500m_V+1000m_xi+7895md.mat
+  [1239] iP03_iV03_iQ02_iX19__P-650m_Q-500m_V+1000m_xi+8947md.mat
+  [1240] iP03_iV03_iQ02_iX20__P-650m_Q-500m_V+1000m_xi+10000md.mat
+  [1261] iP03_iV03_iQ04_iX01__P-650m_Q+500m_V+1000m_xi-10000md.mat
+  [1262] iP03_iV03_iQ04_iX02__P-650m_Q+500m_V+1000m_xi-8947md.mat
+  [1263] iP03_iV03_iQ04_iX03__P-650m_Q+500m_V+1000m_xi-7895md.mat
+  [1339] iP03_iV04_iQ02_iX19__P-650m_Q-500m_V+1050m_xi+8947md.mat
+  [1340] iP03_iV04_iQ02_iX20__P-650m_Q-500m_V+1050m_xi+10000md.mat
+  [1361] iP03_iV04_iQ04_iX01__P-650m_Q+500m_V+1050m_xi-10000md.mat
+  [1362] iP03_iV04_iQ04_iX02__P-650m_Q+500m_V+1050m_xi-8947md.mat
+  [1440] iP03_iV05_iQ02_iX20__P-650m_Q-500m_V+1100m_xi+10000md.mat
+  [1461] iP03_iV05_iQ04_iX01__P-650m_Q+500m_V+1100m_xi-10000md.mat
+  [1518] iP04_iV01_iQ01_iX18__P-825m_Q-1000m_V+900m_xi+7895md.mat
+  [1519] iP04_iV01_iQ01_iX19__P-825m_Q-1000m_V+900m_xi+8947md.mat
+  [1520] iP04_iV01_iQ01_iX20__P-825m_Q-1000m_V+900m_xi+10000md.mat
+  [1535] iP04_iV01_iQ02_iX15__P-825m_Q-500m_V+900m_xi+4737md.mat
+  [1536] iP04_iV01_iQ02_iX16__P-825m_Q-500m_V+900m_xi+5789md.mat
+  [1537] iP04_iV01_iQ02_iX17__P-825m_Q-500m_V+900m_xi+6842md.mat
+  [1538] iP04_iV01_iQ02_iX18__P-825m_Q-500m_V+900m_xi+7895md.mat
+  [1539] iP04_iV01_iQ02_iX19__P-825m_Q-500m_V+900m_xi+8947md.mat
+  [1540] iP04_iV01_iQ02_iX20__P-825m_Q-500m_V+900m_xi+10000md.mat
+  [1561] iP04_iV01_iQ04_iX01__P-825m_Q+500m_V+900m_xi-10000md.mat
+  [1562] iP04_iV01_iQ04_iX02__P-825m_Q+500m_V+900m_xi-8947md.mat
+  [1563] iP04_iV01_iQ04_iX03__P-825m_Q+500m_V+900m_xi-7895md.mat
+  [1564] iP04_iV01_iQ04_iX04__P-825m_Q+500m_V+900m_xi-6842md.mat
+  [1565] iP04_iV01_iQ04_iX05__P-825m_Q+500m_V+900m_xi-5789md.mat
+  [1566] iP04_iV01_iQ04_iX06__P-825m_Q+500m_V+900m_xi-4737md.mat
+  [1581] iP04_iV01_iQ05_iX01__P-825m_Q+1000m_V+900m_xi-10000md.mat
+  [1582] iP04_iV01_iQ05_iX02__P-825m_Q+1000m_V+900m_xi-8947md.mat
+  [1583] iP04_iV01_iQ05_iX03__P-825m_Q+1000m_V+900m_xi-7895md.mat
+  [1636] iP04_iV02_iQ02_iX16__P-825m_Q-500m_V+950m_xi+5789md.mat
+  [1637] iP04_iV02_iQ02_iX17__P-825m_Q-500m_V+950m_xi+6842md.mat
+  [1638] iP04_iV02_iQ02_iX18__P-825m_Q-500m_V+950m_xi+7895md.mat
+  [1639] iP04_iV02_iQ02_iX19__P-825m_Q-500m_V+950m_xi+8947md.mat
+  [1640] iP04_iV02_iQ02_iX20__P-825m_Q-500m_V+950m_xi+10000md.mat
+  [1661] iP04_iV02_iQ04_iX01__P-825m_Q+500m_V+950m_xi-10000md.mat
+  [1662] iP04_iV02_iQ04_iX02__P-825m_Q+500m_V+950m_xi-8947md.mat
+  [1663] iP04_iV02_iQ04_iX03__P-825m_Q+500m_V+950m_xi-7895md.mat
+  [1664] iP04_iV02_iQ04_iX04__P-825m_Q+500m_V+950m_xi-6842md.mat
+  [1665] iP04_iV02_iQ04_iX05__P-825m_Q+500m_V+950m_xi-5789md.mat
+  [1737] iP04_iV03_iQ02_iX17__P-825m_Q-500m_V+1000m_xi+6842md.mat
+  [1738] iP04_iV03_iQ02_iX18__P-825m_Q-500m_V+1000m_xi+7895md.mat
+  [1739] iP04_iV03_iQ02_iX19__P-825m_Q-500m_V+1000m_xi+8947md.mat
+  [1740] iP04_iV03_iQ02_iX20__P-825m_Q-500m_V+1000m_xi+10000md.mat
+  [1761] iP04_iV03_iQ04_iX01__P-825m_Q+500m_V+1000m_xi-10000md.mat
+  [1762] iP04_iV03_iQ04_iX02__P-825m_Q+500m_V+1000m_xi-8947md.mat
+  [1763] iP04_iV03_iQ04_iX03__P-825m_Q+500m_V+1000m_xi-7895md.mat
+  [1764] iP04_iV03_iQ04_iX04__P-825m_Q+500m_V+1000m_xi-6842md.mat
+  [1838] iP04_iV04_iQ02_iX18__P-825m_Q-500m_V+1050m_xi+7895md.mat
+  [1839] iP04_iV04_iQ02_iX19__P-825m_Q-500m_V+1050m_xi+8947md.mat
+  [1840] iP04_iV04_iQ02_iX20__P-825m_Q-500m_V+1050m_xi+10000md.mat
+  [1861] iP04_iV04_iQ04_iX01__P-825m_Q+500m_V+1050m_xi-10000md.mat
+  [1862] iP04_iV04_iQ04_iX02__P-825m_Q+500m_V+1050m_xi-8947md.mat
+  [1863] iP04_iV04_iQ04_iX03__P-825m_Q+500m_V+1050m_xi-7895md.mat
+  [1938] iP04_iV05_iQ02_iX18__P-825m_Q-500m_V+1100m_xi+7895md.mat
+  [1939] iP04_iV05_iQ02_iX19__P-825m_Q-500m_V+1100m_xi+8947md.mat
+  [1940] iP04_iV05_iQ02_iX20__P-825m_Q-500m_V+1100m_xi+10000md.mat
+  [1961] iP04_iV05_iQ04_iX01__P-825m_Q+500m_V+1100m_xi-10000md.mat
+  [1962] iP04_iV05_iQ04_iX02__P-825m_Q+500m_V+1100m_xi-8947md.mat
+  [1963] iP04_iV05_iQ04_iX03__P-825m_Q+500m_V+1100m_xi-7895md.mat
+  [2017] iP05_iV01_iQ01_iX17__P-1000m_Q-1000m_V+900m_xi+6842md.mat
+  [2018] iP05_iV01_iQ01_iX18__P-1000m_Q-1000m_V+900m_xi+7895md.mat
+  [2019] iP05_iV01_iQ01_iX19__P-1000m_Q-1000m_V+900m_xi+8947md.mat
+  [2020] iP05_iV01_iQ01_iX20__P-1000m_Q-1000m_V+900m_xi+10000md.mat
+  [2034] iP05_iV01_iQ02_iX14__P-1000m_Q-500m_V+900m_xi+3684md.mat
+  [2035] iP05_iV01_iQ02_iX15__P-1000m_Q-500m_V+900m_xi+4737md.mat
+  [2036] iP05_iV01_iQ02_iX16__P-1000m_Q-500m_V+900m_xi+5789md.mat
+  [2037] iP05_iV01_iQ02_iX17__P-1000m_Q-500m_V+900m_xi+6842md.mat
+  [2038] iP05_iV01_iQ02_iX18__P-1000m_Q-500m_V+900m_xi+7895md.mat
+  [2039] iP05_iV01_iQ02_iX19__P-1000m_Q-500m_V+900m_xi+8947md.mat
+  [2040] iP05_iV01_iQ02_iX20__P-1000m_Q-500m_V+900m_xi+10000md.mat
+  [2061] iP05_iV01_iQ04_iX01__P-1000m_Q+500m_V+900m_xi-10000md.mat
+  [2062] iP05_iV01_iQ04_iX02__P-1000m_Q+500m_V+900m_xi-8947md.mat
+  [2063] iP05_iV01_iQ04_iX03__P-1000m_Q+500m_V+900m_xi-7895md.mat
+  [2064] iP05_iV01_iQ04_iX04__P-1000m_Q+500m_V+900m_xi-6842md.mat
+  [2065] iP05_iV01_iQ04_iX05__P-1000m_Q+500m_V+900m_xi-5789md.mat
+  [2066] iP05_iV01_iQ04_iX06__P-1000m_Q+500m_V+900m_xi-4737md.mat
+  [2067] iP05_iV01_iQ04_iX07__P-1000m_Q+500m_V+900m_xi-3684md.mat
+  [2081] iP05_iV01_iQ05_iX01__P-1000m_Q+1000m_V+900m_xi-10000md.mat
+  [2082] iP05_iV01_iQ05_iX02__P-1000m_Q+1000m_V+900m_xi-8947md.mat
+  [2083] iP05_iV01_iQ05_iX03__P-1000m_Q+1000m_V+900m_xi-7895md.mat
+  [2084] iP05_iV01_iQ05_iX04__P-1000m_Q+1000m_V+900m_xi-6842md.mat
+  [2119] iP05_iV02_iQ01_iX19__P-1000m_Q-1000m_V+950m_xi+8947md.mat
+  [2120] iP05_iV02_iQ01_iX20__P-1000m_Q-1000m_V+950m_xi+10000md.mat
+  [2135] iP05_iV02_iQ02_iX15__P-1000m_Q-500m_V+950m_xi+4737md.mat
+  [2136] iP05_iV02_iQ02_iX16__P-1000m_Q-500m_V+950m_xi+5789md.mat
+  [2137] iP05_iV02_iQ02_iX17__P-1000m_Q-500m_V+950m_xi+6842md.mat
+  [2138] iP05_iV02_iQ02_iX18__P-1000m_Q-500m_V+950m_xi+7895md.mat
+  [2139] iP05_iV02_iQ02_iX19__P-1000m_Q-500m_V+950m_xi+8947md.mat
+  [2140] iP05_iV02_iQ02_iX20__P-1000m_Q-500m_V+950m_xi+10000md.mat
+  [2161] iP05_iV02_iQ04_iX01__P-1000m_Q+500m_V+950m_xi-10000md.mat
+  [2162] iP05_iV02_iQ04_iX02__P-1000m_Q+500m_V+950m_xi-8947md.mat
+  [2163] iP05_iV02_iQ04_iX03__P-1000m_Q+500m_V+950m_xi-7895md.mat
+  [2164] iP05_iV02_iQ04_iX04__P-1000m_Q+500m_V+950m_xi-6842md.mat
+  [2165] iP05_iV02_iQ04_iX05__P-1000m_Q+500m_V+950m_xi-5789md.mat
+  [2166] iP05_iV02_iQ04_iX06__P-1000m_Q+500m_V+950m_xi-4737md.mat
+  [2181] iP05_iV02_iQ05_iX01__P-1000m_Q+1000m_V+950m_xi-10000md.mat
+  [2182] iP05_iV02_iQ05_iX02__P-1000m_Q+1000m_V+950m_xi-8947md.mat
+  [2220] iP05_iV03_iQ01_iX20__P-1000m_Q-1000m_V+1000m_xi+10000md.mat
+  [2236] iP05_iV03_iQ02_iX16__P-1000m_Q-500m_V+1000m_xi+5789md.mat
+  [2237] iP05_iV03_iQ02_iX17__P-1000m_Q-500m_V+1000m_xi+6842md.mat
+  [2238] iP05_iV03_iQ02_iX18__P-1000m_Q-500m_V+1000m_xi+7895md.mat
+  [2239] iP05_iV03_iQ02_iX19__P-1000m_Q-500m_V+1000m_xi+8947md.mat
+  [2240] iP05_iV03_iQ02_iX20__P-1000m_Q-500m_V+1000m_xi+10000md.mat
+  [2261] iP05_iV03_iQ04_iX01__P-1000m_Q+500m_V+1000m_xi-10000md.mat
+  [2262] iP05_iV03_iQ04_iX02__P-1000m_Q+500m_V+1000m_xi-8947md.mat
+  [2263] iP05_iV03_iQ04_iX03__P-1000m_Q+500m_V+1000m_xi-7895md.mat
+  [2264] iP05_iV03_iQ04_iX04__P-1000m_Q+500m_V+1000m_xi-6842md.mat
+  [2265] iP05_iV03_iQ04_iX05__P-1000m_Q+500m_V+1000m_xi-5789md.mat
+  [2281] iP05_iV03_iQ05_iX01__P-1000m_Q+1000m_V+1000m_xi-10000md.mat
+  [2336] iP05_iV04_iQ02_iX16__P-1000m_Q-500m_V+1050m_xi+5789md.mat
+  [2337] iP05_iV04_iQ02_iX17__P-1000m_Q-500m_V+1050m_xi+6842md.mat
+  [2338] iP05_iV04_iQ02_iX18__P-1000m_Q-500m_V+1050m_xi+7895md.mat
+  [2339] iP05_iV04_iQ02_iX19__P-1000m_Q-500m_V+1050m_xi+8947md.mat
+  [2340] iP05_iV04_iQ02_iX20__P-1000m_Q-500m_V+1050m_xi+10000md.mat
+  [2361] iP05_iV04_iQ04_iX01__P-1000m_Q+500m_V+1050m_xi-10000md.mat
+  [2362] iP05_iV04_iQ04_iX02__P-1000m_Q+500m_V+1050m_xi-8947md.mat
+  [2363] iP05_iV04_iQ04_iX03__P-1000m_Q+500m_V+1050m_xi-7895md.mat
+  [2364] iP05_iV04_iQ04_iX04__P-1000m_Q+500m_V+1050m_xi-6842md.mat
+  [2365] iP05_iV04_iQ04_iX05__P-1000m_Q+500m_V+1050m_xi-5789md.mat
+  [2437] iP05_iV05_iQ02_iX17__P-1000m_Q-500m_V+1100m_xi+6842md.mat
+  [2438] iP05_iV05_iQ02_iX18__P-1000m_Q-500m_V+1100m_xi+7895md.mat
+  [2439] iP05_iV05_iQ02_iX19__P-1000m_Q-500m_V+1100m_xi+8947md.mat
+  [2440] iP05_iV05_iQ02_iX20__P-1000m_Q-500m_V+1100m_xi+10000md.mat
+  [2461] iP05_iV05_iQ04_iX01__P-1000m_Q+500m_V+1100m_xi-10000md.mat
+  [2462] iP05_iV05_iQ04_iX02__P-1000m_Q+500m_V+1100m_xi-8947md.mat
+  [2463] iP05_iV05_iQ04_iX03__P-1000m_Q+500m_V+1100m_xi-7895md.mat
+  [2464] iP05_iV05_iQ04_iX04__P-1000m_Q+500m_V+1100m_xi-6842md.mat
+
+Yba: HasComplexPair cases = 0
+  (none)
+
+Ybb: HasComplexPair cases = 34
+  [   1] iP01_iV01_iQ01_iX01__P-300m_Q-1000m_V+900m_xi-10000md.mat
+  [   2] iP01_iV01_iQ01_iX02__P-300m_Q-1000m_V+900m_xi-8947md.mat
+  [  99] iP01_iV01_iQ05_iX19__P-300m_Q+1000m_V+900m_xi+8947md.mat
+  [ 100] iP01_iV01_iQ05_iX20__P-300m_Q+1000m_V+900m_xi+10000md.mat
+  [ 101] iP01_iV02_iQ01_iX01__P-300m_Q-1000m_V+950m_xi-10000md.mat
+  [ 102] iP01_iV02_iQ01_iX02__P-300m_Q-1000m_V+950m_xi-8947md.mat
+  [ 103] iP01_iV02_iQ01_iX03__P-300m_Q-1000m_V+950m_xi-7895md.mat
+  [ 198] iP01_iV02_iQ05_iX18__P-300m_Q+1000m_V+950m_xi+7895md.mat
+  [ 199] iP01_iV02_iQ05_iX19__P-300m_Q+1000m_V+950m_xi+8947md.mat
+  [ 200] iP01_iV02_iQ05_iX20__P-300m_Q+1000m_V+950m_xi+10000md.mat
+  [ 201] iP01_iV03_iQ01_iX01__P-300m_Q-1000m_V+1000m_xi-10000md.mat
+  [ 202] iP01_iV03_iQ01_iX02__P-300m_Q-1000m_V+1000m_xi-8947md.mat
+  [ 203] iP01_iV03_iQ01_iX03__P-300m_Q-1000m_V+1000m_xi-7895md.mat
+  [ 298] iP01_iV03_iQ05_iX18__P-300m_Q+1000m_V+1000m_xi+7895md.mat
+  [ 299] iP01_iV03_iQ05_iX19__P-300m_Q+1000m_V+1000m_xi+8947md.mat
+  [ 300] iP01_iV03_iQ05_iX20__P-300m_Q+1000m_V+1000m_xi+10000md.mat
+  [ 301] iP01_iV04_iQ01_iX01__P-300m_Q-1000m_V+1050m_xi-10000md.mat
+  [ 302] iP01_iV04_iQ01_iX02__P-300m_Q-1000m_V+1050m_xi-8947md.mat
+  [ 303] iP01_iV04_iQ01_iX03__P-300m_Q-1000m_V+1050m_xi-7895md.mat
+  [ 304] iP01_iV04_iQ01_iX04__P-300m_Q-1000m_V+1050m_xi-6842md.mat
+  [ 397] iP01_iV04_iQ05_iX17__P-300m_Q+1000m_V+1050m_xi+6842md.mat
+  [ 398] iP01_iV04_iQ05_iX18__P-300m_Q+1000m_V+1050m_xi+7895md.mat
+  [ 399] iP01_iV04_iQ05_iX19__P-300m_Q+1000m_V+1050m_xi+8947md.mat
+  [ 400] iP01_iV04_iQ05_iX20__P-300m_Q+1000m_V+1050m_xi+10000md.mat
+  [ 401] iP01_iV05_iQ01_iX01__P-300m_Q-1000m_V+1100m_xi-10000md.mat
+  [ 402] iP01_iV05_iQ01_iX02__P-300m_Q-1000m_V+1100m_xi-8947md.mat
+  [ 403] iP01_iV05_iQ01_iX03__P-300m_Q-1000m_V+1100m_xi-7895md.mat
+  [ 404] iP01_iV05_iQ01_iX04__P-300m_Q-1000m_V+1100m_xi-6842md.mat
+  [ 405] iP01_iV05_iQ01_iX05__P-300m_Q-1000m_V+1100m_xi-5789md.mat
+  [ 496] iP01_iV05_iQ05_iX16__P-300m_Q+1000m_V+1100m_xi+5789md.mat
+  [ 497] iP01_iV05_iQ05_iX17__P-300m_Q+1000m_V+1100m_xi+6842md.mat
+  [ 498] iP01_iV05_iQ05_iX18__P-300m_Q+1000m_V+1100m_xi+7895md.mat
+  [ 499] iP01_iV05_iQ05_iX19__P-300m_Q+1000m_V+1100m_xi+8947md.mat
+  [ 500] iP01_iV05_iQ05_iX20__P-300m_Q+1000m_V+1100m_xi+10000md.mat
+
+==================== 4) 共轭配对异常检查 ====================
+所有通道在当前 tol=1.0e-08 下，共轭配对检查均通过。

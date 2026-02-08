@@ -77,9 +77,10 @@ def process_single_file(fpath):
             # 无需在业务代码中手动计算 weights 数组，保持了业务逻辑的整洁和算法的封装性
             
             # 4. 执行矢量拟合
+            # 注意：VF.py 中 n_poles 代表极点"对"数。要固定6阶(6个极点)，需设置 min/max_poles=3
             poles, residues, d, h, metrics = VF.vectfit_find_best_order(
                 f_vec, s_vec, 
-                min_poles=2, max_poles=40, step=2, 
+                min_poles=3, max_poles=3, step=1, 
                 target_error=1e-5, 
                 weighting_policy='none', # <--- 优雅的接口调用
                 silent=True
@@ -137,7 +138,9 @@ def process_single_file(fpath):
                         'Branch_ID': item['id'],
                         'R': item['R'],
                         'L': item['L'],
-                        'C': item['C']
+                        'C': item['C'],
+                        'b': item.get('b', 0),
+                        'g_m': item.get('g_m', 0)
                     })
                     file_results.append(row)
                     
@@ -193,7 +196,7 @@ def run_batch():
         cols_order = ['Filename', 'iP', 'iV', 'iQ', 'iX', 'P', 'Q', 'V', 'xi', 
                       'Element', 'Is_Passive', 'Min_Real_Part', # 放在显眼位置
                       'Branch_Type', 'Branch_ID', 
-                      'R', 'L', 'C', 
+                      'R', 'L', 'C', 'b', 'g_m',
                       'RMS_Rel_Error', 'Max_Rel_Error', 'Order']
         
         # 确保所有列存在（填补 NaN）
