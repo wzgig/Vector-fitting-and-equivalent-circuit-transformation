@@ -5,9 +5,8 @@ import numpy as np
 import VF
 
 # --- 配置 ---
-INPUT_FILE = os.path.join("your_root", "csv_data", "iP01_iV01_iQ01_iX01__P-300m_Q-1000m_V+900m_xi-10000md.csv")
+INPUT_FILE = os.path.join("your_root", "csv_data", "iP05_iV03_iQ03_iX11__P-1000m_Q+0m_V+1000m_xi+526md.csv")
 TARGET_ELEMENT = "Y11"
-
 def print_separator(title):
     print("\n" + "="*60)
     print(f" {title}")
@@ -47,7 +46,7 @@ def main():
         # 固定6阶(6个极点)，需设置 min/max_poles=3 (因为代码中 n_poles 是对数)
         poles, residues, d, h, metrics = VF.vectfit_find_best_order(
             f_vec, s_vec, 
-            min_poles=3, max_poles=3, step=1, 
+            min_poles=2, max_poles=32, step=2, 
             target_error=1e-5, 
             weighting_policy='none',
             silent=False 

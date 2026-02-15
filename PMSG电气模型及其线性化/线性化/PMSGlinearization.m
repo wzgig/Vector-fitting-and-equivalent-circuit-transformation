@@ -2,7 +2,7 @@ clear;
 clc;
 tic
 
-Path_root_Results = "your_root";
+Path_root_Results = "your_root_small1";
 
 if ~exist(Path_root_Results, 'dir')
     mkdir(Path_root_Results);
@@ -12,15 +12,17 @@ else
 end
 
 % 定义参数范围和步长
-P_range = linspace(-0.3, -1, 5);
-Q_range = linspace(-1, 1, 5);
-V_range = linspace(0.9, 1.1, 5);
-xi_range = linspace(-pi/18, pi/18, 20);
+% P_range = linspace(-0.3, -1, 5);
+% Q_range = linspace(-1, 1, 5);
+% V_range = linspace(0.9, 1.1, 5);
+% xi_range = linspace(-pi/18, pi/18, 20);
+P_range = -1;
+Q_range = 0;
+V_range = 1;
+xi_range = 0.1;
 
-% P_range = -1;
-% Q_range = 0;
-% V_range = 1;
-% xi_range = 0; 
+notStableCount = 0;          % 不稳定工况计数
+notStableList  = strings(0); % 可选：记录不稳定工况文件名/标签
 
 for iP = 1:length(P_range)
     P = P_range(iP);
@@ -289,11 +291,6 @@ meta.sizes = struct('n',n,'m',m,'p',p);
 meta.filename = fname;     % 方便从 mat 内部知道它叫什么
 meta.Path_root_Results = Path_root_Results;
 
-% filename = sprintf('P%d_V%d_Q%d_X%d.mat', iP, iV, iQ, ixi);
-% filepath = fullfile(Path_root_Results, filename);
-% save(filepath, 'sys');
-% disp("Saved to: " + filepath);
-
 filepath = fullfile(Path_root_Results, fname + ".mat");
 % 说明：x_ss/u_ss 是线性化点；thetapll 是稳态 PLL 角（前面解出来的）
 save(filepath, ...
@@ -307,13 +304,57 @@ save(filepath, ...
 disp("Saved to: " + filepath);
 
 if any(real(eigenvalues) > 0)
-disp([filename, "is not stable."])
+    notStableCount = notStableCount + 1;
+    notStableList(end+1) = fname;  % 可选：记录该工况标识
+    disp([fname, " is not stable."])
 else
-disp([num2str(P),num2str(V),num2str(Q),num2str(xi),"is stable."])    
+    disp([num2str(P), " ", num2str(V), " ", num2str(Q), " ", num2str(xi), " is stable."])
 end
             end
         end
     end
 end
 % run("Eigenvalue_and_Pole_Zero_Analysis.m")
+disp("====================================================")
+disp("Total NOT stable cases = " + num2str(notStableCount))
+
+% 可选：把不稳定工况列表打印出来
+if notStableCount > 0
+    disp("NOT stable cases (fname):")
+    disp(notStableList)
+end
+disp("====================================================")
 toc
+
+%% % ====================================================
+% 删除不稳定工况对应的 .mat 文件
+% ====================================================
+deleteCount = 0;
+deleteFail  = 0;
+
+disp("Deleting NOT stable .mat files from: " + Path_root_Results)
+
+for k = 1:numel(notStableList)
+    % 你的 notStableList 存的是 fname（不带 .mat），所以这里补上后缀
+    matfile = fullfile(Path_root_Results, notStableList(k) + ".mat");
+
+    if isfile(matfile)
+        try
+            delete(matfile);
+            deleteCount = deleteCount + 1;
+            fprintf("Deleted (%d/%d): %s\n", deleteCount, numel(notStableList), matfile);
+        catch ME
+            deleteFail = deleteFail + 1;
+            fprintf("FAILED to delete: %s\nReason: %s\n", matfile, ME.message);
+        end
+    else
+        % 可能已经删过/文件名不匹配/路径不对
+        deleteFail = deleteFail + 1;
+        fprintf("File not found (skip): %s\n", matfile);
+    end
+end
+
+disp("====================================================")
+disp("Delete done. Deleted = " + num2str(deleteCount) + ...
+     ", Failed/Skipped = " + num2str(deleteFail))
+disp("====================================================")
